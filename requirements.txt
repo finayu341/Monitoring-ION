@@ -6,3 +6,5 @@ seaborn
 reportlab
 openpyxl
 geopy
+streamlit-folium
+folium
