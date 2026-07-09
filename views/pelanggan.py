@@ -67,7 +67,6 @@ class Pelanggan:
         
         top_10_gangguan = df_pelanggan.nlargest(10, 'JUMLAH_GANGGUAN')
 
-        # Pastikan id dan nama string
         top_10_gangguan['ID PELANGGAN'] = top_10_gangguan['ID PELANGGAN'].astype(str)
         top_10_gangguan['NAMA PELANGGAN'] = top_10_gangguan['NAMA PELANGGAN'].astype(str)
 

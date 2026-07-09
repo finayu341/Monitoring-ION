@@ -10,7 +10,6 @@ class Dashboard:
 
     @staticmethod
     def show(df):
-        # Header dengan gradient yang lebih modern
         st.markdown("""
         <div style="background: linear-gradient(90deg, #4b6cb7 0%, #182848 100%);
                     padding: 25px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -185,7 +184,7 @@ class Dashboard:
 
         # Kotak 6 - Terminated Risk
         with col6:
-            # Tentukan warna berdasarkan tingkat risiko
+            #  warna berdasarkan tingkat risiko
             risk_color = "#e74c3c" if churn_rate > 10 else "#f39c12" if churn_rate > 5 else "#2ecc71"
             
             st.markdown(f"""

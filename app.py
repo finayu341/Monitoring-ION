@@ -5,7 +5,6 @@ from data_loader import DataLoader
 import os
 import tempfile
 
-# Import semua view
 from views.dashboard import Dashboard
 from views.gangguan import Gangguan
 from views.teknisi import Teknisi

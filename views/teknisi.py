@@ -52,7 +52,7 @@ def preprocess_teknisi(df):
     return df
 
 
-# Method 1: Dipakai Dashboard (ambil teknisi terbanyak)
+# Method 1: teknisi terbanyak
 # ======================================================
 def get_top_teknisi(df):
     df_clean = preprocess_teknisi(df)

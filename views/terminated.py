@@ -27,9 +27,8 @@ class Terminated:
         df['Status Berisiko'] = df['durasi_penanganan'].apply(lambda x: 'Berisiko' if x > 7 else 'Aman')
         terminate = df['Status Berisiko'].value_counts(normalize=True) * 100
 
-        # Diagram lebih kecil dan menarik
-        fig, ax = plt.subplots(figsize=(6, 4))  # Ukuran lebih kecil
-        colors = ['#00C851', '#ff4444']  # Hijau dan merah yang lebih menarik
+        fig, ax = plt.subplots(figsize=(6, 4))  
+        colors = ['#00C851', '#ff4444']  
         
         bars = sns.barplot(x=terminate.index, y=terminate.values, palette=colors, ax=ax, alpha=0.8)
         
@@ -37,14 +36,14 @@ class Terminated:
         for i, v in enumerate(terminate.values):
             ax.text(i, v + 1, f"{v:.1f}%", ha='center', fontweight='bold', fontsize=10)
         
-        # Styling yang lebih menarik
+        # style
         ax.set_title("📊 Persentase Pelanggan Berisiko Terminated", fontweight='bold', pad=15)
         ax.set_ylabel("Persentase (%)", fontweight='bold')
         ax.set_xlabel("Status", fontweight='bold')
         ax.grid(axis='y', alpha=0.3)
         ax.set_axisbelow(True)
         
-        # Hapus spines (garis tepi) untuk tampilan yang lebih bersih
+        # Hapus spines 
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         
@@ -53,7 +52,7 @@ class Terminated:
 
         st.markdown("---")
         
-        # Section Pelanggan Berisiko dengan tampilan lebih menarik
+        # Section Pelanggan Berisiko 
         st.markdown("""
         <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
                     padding: 15px; border-radius: 10px; margin-bottom: 20px;">
@@ -64,7 +63,7 @@ class Terminated:
         churn_list = df[df['Status Berisiko'] == 'Berisiko'][['ID PELANGGAN', 'NAMA PELANGGAN', 'durasi_penanganan']].head(5)
         churn_list = churn_list.reset_index(drop=True)
         
-        # Tampilkan dengan styling yang menarik
+        # style
         st.dataframe(
             churn_list,
             column_config={
@@ -79,7 +78,7 @@ class Terminated:
             use_container_width=True
         )
 
-        # Info box yang lebih menarik
+        # Info box
         risiko_persen = (terminate['Berisiko'] if 'Berisiko' in terminate else 0)
         
         if risiko_persen > 0:

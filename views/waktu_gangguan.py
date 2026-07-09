@@ -29,7 +29,6 @@ class WaktuGangguan:
         # Container untuk filter
         with st.container():
             # Hanya menyisakan filter tahun saja
-            # Dapatkan daftar tahun unik
             tahun_unik = sorted(df['tahun'].dropna().unique())
             tahun_terpilih = st.selectbox(
                 "Pilih Tahun:",
