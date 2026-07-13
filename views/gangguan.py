@@ -121,7 +121,8 @@ class Gangguan:
             colors = sns.color_palette("Blues_r", len(gangguan_count))
 
             sns.barplot(x=gangguan_count.index, y=gangguan_count.values,
-                        ax=ax, palette=colors, width=0.6)
+                ax=ax, hue=gangguan_count.index, palette=colors,
+                legend=False, width=0.6)
 
             for i, val in enumerate(gangguan_count.values):
                 ax.text(i, val + 0.2, str(val), ha='center', va='bottom',
