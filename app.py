@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from data_loader import DataLoader
 import os
-import tempfile
+import json
 
 from views.dashboard import Dashboard
 from views.gangguan import Gangguan
@@ -20,34 +20,78 @@ plt.style.use('seaborn-v0_8')
 sns.set_palette("husl")
 st.set_page_config(page_title="CUSTOBASE.com", layout="wide")
 
-# Session state untuk menyimpan path file yang di-upload
+# ===============================================================
+# 📂 PERSISTENT STORAGE UNTUK FILE UPLOAD
+# ===============================================================
+# File yang di-upload disimpan di path TETAP (bukan tempfile random),
+# supaya tetap ada walaupun browser di-refresh (session_state Streamlit
+# ter-reset setiap kali halaman di-refresh, tapi file di disk tidak).
+UPLOAD_DIR = "uploaded_data"
+UPLOAD_PATH = os.path.join(UPLOAD_DIR, "current_upload.xlsx")
+UPLOAD_META_PATH = os.path.join(UPLOAD_DIR, "current_upload_meta.json")
+
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+def _read_upload_meta():
+    """Baca nama file asli dari metadata, kalau ada."""
+    if os.path.exists(UPLOAD_META_PATH):
+        try:
+            with open(UPLOAD_META_PATH, "r", encoding="utf-8") as f:
+                return json.load(f).get("file_name")
+        except Exception:
+            return None
+    return None
+
+
+def _write_upload_meta(file_name):
+    with open(UPLOAD_META_PATH, "w", encoding="utf-8") as f:
+        json.dump({"file_name": file_name}, f)
+
+
+# Inisialisasi session state SEKALI per session, berdasarkan apa yang
+# sudah ada di disk (bukan mulai dari kosong lagi).
 if 'current_data_file' not in st.session_state:
-    # File default jika belum ada upload
-    if os.path.exists('data_kotor.xlsx'):
+    if os.path.exists(UPLOAD_PATH):
+        # Sudah pernah ada file yang di-upload sebelumnya -> tetap pakai itu
+        st.session_state.current_data_file = UPLOAD_PATH
+        st.session_state.file_name = _read_upload_meta() or "current_upload.xlsx"
+        st.session_state.is_uploaded_file = True
+    elif os.path.exists('data_kotor.xlsx'):
+        # Belum pernah ada upload -> pakai file default
         st.session_state.current_data_file = 'data_kotor.xlsx'
+        st.session_state.file_name = 'data_kotor.xlsx'
+        st.session_state.is_uploaded_file = False
     else:
         st.session_state.current_data_file = None
+        st.session_state.file_name = None
+        st.session_state.is_uploaded_file = False
+
 
 # Fungsi untuk handle upload file
 def handle_file_upload():
     uploaded_file = st.sidebar.file_uploader(
-        "📤 Upload File Excel", 
+        "📤 Upload File Excel",
         type=['xlsx', 'xls'],
         help="Upload file Excel dengan data gangguan"
     )
-    
+
     if uploaded_file is not None:
         try:
-            # Simpan file ke temporary directory
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp_file:
-                tmp_file.write(uploaded_file.getvalue())
-                tmp_path = tmp_file.name
-            
-            # Update session state dengan path file baru
-            st.session_state.current_data_file = tmp_path
+            # Simpan/timpa file ke path TETAP, bukan tempfile random,
+            # supaya file baru ini juga tetap dipakai walau di-refresh.
+            with open(UPLOAD_PATH, "wb") as f:
+                f.write(uploaded_file.getvalue())
+
+            _write_upload_meta(uploaded_file.name)
+
+            # Update session state dengan file yang baru saja diupload
+            st.session_state.current_data_file = UPLOAD_PATH
             st.session_state.file_name = uploaded_file.name
+            st.session_state.is_uploaded_file = True
+
             st.sidebar.success(f"✅ File '{uploaded_file.name}' berhasil diupload!")
-            
+
             # Clear cache agar data terload ulang
             st.cache_data.clear()
             return True
@@ -55,6 +99,7 @@ def handle_file_upload():
             st.sidebar.error(f"❌ Error saat upload file: {e}")
             return False
     return False
+
 
 # ===============================================================
 # SIDEBAR
@@ -125,7 +170,7 @@ pilihan = st.sidebar.radio(
 if st.session_state.current_data_file:
     # Load data dengan file yang sedang aktif
     df = DataLoader.load_data(st.session_state.current_data_file)
-    
+
     if not df.empty:
         # Fitur
         menu_map = {
@@ -140,28 +185,27 @@ if st.session_state.current_data_file:
 
         menu_map[pilihan].show(df)
 
-    
     else:
         st.error("⚠️ Data tidak berhasil dimuat. Pastikan file Excel memiliki format yang benar.")
 else:
     st.warning("👈 Silakan upload file Excel melalui sidebar untuk memulai analisis.")
 
 
-
 # Bagian upload file di sidebar
 st.sidebar.markdown('<p class="sidebar-header">📂 Upload Data</p>', unsafe_allow_html=True)
 
-# Upload file
+# Upload file (kalau ada file baru, otomatis menimpa file lama di disk)
 file_uploaded = handle_file_upload()
 
 # Info file yang sedang digunakan
 if st.session_state.current_data_file:
     file_name = st.session_state.get('file_name', os.path.basename(st.session_state.current_data_file))
+    status_label = 'File upload' if st.session_state.get('is_uploaded_file') else 'File default'
     st.sidebar.markdown(f"""
     <div class="upload-info">
     <strong>📁 File Aktif:</strong><br>
     {file_name}<br>
-    <small>{'File upload' if file_uploaded else 'File default'}</small>
+    <small>{status_label}</small>
     </div>
     """, unsafe_allow_html=True)
 else:
