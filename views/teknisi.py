@@ -24,7 +24,7 @@ def preprocess_teknisi(df):
         .astype(str)
         .str.upper()
         .str.replace(r'TS\s*[:\-~]*', '', regex=True)   # hapus TS
-        .str.replace(r'TIM.*', '', regex=True)          # hapus TIM
+        .str.replace(r'\bTIM\b', '', regex=True)         # hapus TIM
         .str.replace(r'\(.*?\)', '', regex=True)        # hapus isi kurung
         .str.replace(r'[^A-Z,& ]', '', regex=True)      # hanya huruf, spasi, koma, &
         .str.replace(r'\s+', ' ', regex=True)           # rapikan spasi
@@ -144,8 +144,8 @@ class Teknisi:
             df_filtered = df_filtered[df_filtered['TEKNISI'] == selected_teknisi]
 
         # filter wilayah
-        if selected_wilayah != "Semua" and 'DAERAH' in df.columns:
-            df_filtered = df_filtered[df['DAERAH'] == selected_wilayah]
+        if selected_wilayah != "Semua" and 'DAERAH' in df_filtered.columns:
+            df_filtered = df_filtered[df_filtered['DAERAH'] == selected_wilayah]
 
         # filter tanggal
         if len(tanggal_range) == 2:
@@ -154,7 +154,10 @@ class Teknisi:
                 (df_filtered['TGL PENANGANAN'] >= start) &
                 (df_filtered['TGL PENANGANAN'] <= end)
             ]
-
+        # CEK DATA SETELAH FILTER
+        if df_filtered.empty:
+            st.warning("Tidak ada data yang sesuai dengan filter yang dipilih.")
+            return
         # =============================
         # METRICS
         # =============================
@@ -167,8 +170,17 @@ class Teknisi:
             sla = (df_filtered['DURASI_PENANGANAN'] <= 1).mean() * 100
 
         top_gangguan = "-"
+
         if 'KENDALA' in df_filtered.columns:
-            top_gangguan = df_filtered['KENDALA'].mode()[0]
+
+            mode_kendala = (
+            df_filtered['KENDALA']
+            .dropna()
+            .mode()
+        )
+
+        if not mode_kendala.empty:
+            top_gangguan = mode_kendala.iloc[0]
 
         col1, col2, col3, col4 = st.columns(4)
 
@@ -208,16 +220,29 @@ class Teknisi:
             st.markdown("#### DISTRIBUSI GANGGUAN")
 
             if 'KENDALA' in df_filtered.columns:
-                distribusi = df_filtered['KENDALA'].value_counts().head(5)
+
+                distribusi = (
+                    df_filtered['KENDALA']
+                    .dropna()
+                    .value_counts()
+                    .head(5)
+                )
+
+            if not distribusi.empty:
 
                 fig2, ax2 = plt.subplots()
+
                 ax2.pie(
                     distribusi.values,
                     labels=distribusi.index,
                     autopct='%1.0f%%'
                 )
+
                 ax2.set_title("Distribusi Gangguan")
                 st.pyplot(fig2)
+
+            else:
+                st.info("Data gangguan tidak tersedia.")
 
         # =============================
         # DETAIL TABLE
