@@ -17,14 +17,14 @@ class Terminated:
 
         df.columns = df.columns.str.strip().str.upper()
 
-        if 'durasi_penanganan' not in df.columns:
+        if 'DURASI_PENANGANAN' not in df.columns:
             if 'TGL LAPORAN' in df.columns and 'TGL PENANGANAN' in df.columns:
-                df['durasi_penanganan'] = (df['TGL PENANGANAN'] - df['TGL LAPORAN']).dt.days
+                df['DURASI_PENANGANAN'] = (df['TGL PENANGANAN'] - df['TGL LAPORAN']).dt.days
             else:
                 st.error("Kolom TGL LAPORAN atau TGL PENANGANAN tidak ditemukan.")
                 return
 
-        df['Status Berisiko'] = df['durasi_penanganan'].apply(lambda x: 'Berisiko' if x > 7 else 'Aman')
+        df['Status Berisiko'] = df['DURASI_PENANGANAN'].apply(lambda x: 'Berisiko' if x > 7 else 'Aman')
         terminate = df['Status Berisiko'].value_counts(normalize=True) * 100
 
         fig, ax = plt.subplots(figsize=(6, 4))  
@@ -34,7 +34,7 @@ class Terminated:
         
         # Tambahkan nilai di atas bar
         for i, v in enumerate(terminate.values):
-            ax.text(i, v + 1, f"{v:.1f}%", ha='center', fontweight='bold', fontsize=10)
+            ax.text(i, v + 1, f"{v:.2f}%", ha='center', fontweight='bold', fontsize=10)
         
         # style
         ax.set_title("📊 Persentase Pelanggan Berisiko Terminated", fontweight='bold', pad=15)
@@ -60,7 +60,7 @@ class Terminated:
         </div>
         """, unsafe_allow_html=True)
         
-        churn_list = df[df['Status Berisiko'] == 'Berisiko'][['ID PELANGGAN', 'NAMA PELANGGAN', 'durasi_penanganan']].head(5)
+        churn_list = df[df['Status Berisiko'] == 'Berisiko'][['ID PELANGGAN', 'NAMA PELANGGAN', 'DURASI_PENANGANAN']].head(5)
         churn_list = churn_list.reset_index(drop=True)
         
         # style
@@ -69,7 +69,7 @@ class Terminated:
             column_config={
                 "ID PELANGGAN": "🆔 ID Pelanggan",
                 "NAMA PELANGGAN": "👤 Nama Pelanggan", 
-                "durasi_penanganan": st.column_config.NumberColumn(
+                "DURASI_PENANGANAN": st.column_config.NumberColumn(
                     "⏱️ Durasi (hari)",
                     help="Durasi penanganan dalam hari",
                     format="%d hari"
@@ -83,7 +83,7 @@ class Terminated:
         
         if risiko_persen > 0:
             st.error(f"""
-            ⚠️ **PERINGATAN:** Terdapat **{risiko_persen:.1f}%** pelanggan berisiko terminated!
+            ⚠️ **PERINGATAN:** Terdapat **{risiko_persen:.2f}%** pelanggan berisiko terminated!
             
             Pelanggan dengan durasi penanganan > 7 hari berpotensi mengalami ketidakpuasan 
             dan berisiko menghentikan layanan.
