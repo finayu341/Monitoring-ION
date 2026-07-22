@@ -21,11 +21,8 @@ sns.set_palette("husl")
 st.set_page_config(page_title="CUSTOBASE.com", layout="wide")
 
 # ===============================================================
-# 📂 PERSISTENT STORAGE UNTUK FILE UPLOAD
-# ===============================================================
-# File yang di-upload disimpan di path TETAP (bukan tempfile random),
-# supaya tetap ada walaupun browser di-refresh (session_state Streamlit
-# ter-reset setiap kali halaman di-refresh, tapi file di disk tidak).
+# PERSISTENT STORAGE UNTUK FILE UPLOAD
+
 UPLOAD_DIR = "uploaded_data"
 UPLOAD_PATH = os.path.join(UPLOAD_DIR, "current_upload.xlsx")
 UPLOAD_META_PATH = os.path.join(UPLOAD_DIR, "current_upload_meta.json")
@@ -49,8 +46,6 @@ def _write_upload_meta(file_name):
         json.dump({"file_name": file_name}, f)
 
 
-# Inisialisasi session state SEKALI per session, berdasarkan apa yang
-# sudah ada di disk (bukan mulai dari kosong lagi).
 if 'current_data_file' not in st.session_state:
     if os.path.exists(UPLOAD_PATH):
         # Sudah pernah ada file yang di-upload sebelumnya -> tetap pakai itu
@@ -79,7 +74,6 @@ def handle_file_upload():
     if uploaded_file is not None:
         try:
             # Simpan/timpa file ke path TETAP, bukan tempfile random,
-            # supaya file baru ini juga tetap dipakai walau di-refresh.
             with open(UPLOAD_PATH, "wb") as f:
                 f.write(uploaded_file.getvalue())
 
